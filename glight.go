@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/xplshn/a-utils/pkg/ccmd"
+
 	"github.com/blackjack/webcam"
 	_ "image/jpeg"
 )
@@ -80,7 +82,7 @@ func atoi(s string) int {
 }
 
 // DetectBrightnessFiles automatically detects the brightness control files.
-func DetectBrightnessFiles() (string, string, error) {
+func detectBrightnessFiles() (string, string, error) {
 	backlightDir := "/sys/class/backlight"
 	files, err := filepath.Glob(filepath.Join(backlightDir, "*", "brightness"))
 	if err != nil {
@@ -135,11 +137,26 @@ func main() {
 	singleSetBrightness := flag.Uint("set", 101, "Set brightness directly (1-100)")
 	showMaxBrightness := flag.Bool("max", false, "Show maximum brightness value and exit")
 	scaleFactor := flag.Int("scale", 120, "Scale factor for brightness transition")
+	cmdInfo := &ccmd.CmdInfo{
+		Name:        "glight",
+		Authors:     []string{"xplshn"},
+		Repository:  "https://github.com/xplshn/glight",
+		Description: "Lets you controls your laptop's backlight easily",
+		Synopsis:    "<|--webcam [filepath](/dev/video*)|--brightness [filepath](/sys/class/backlight/*/brightness)|--max-brightness [filepath](/sys/class/backlight/*/max_brightness)|--min-brightness [1-100](10)|--set [1-100]|--max [1-100]|--scale [1-100](120)> [FILE/s]",
+	}
+	helpPage, err := cmdInfo.GenerateHelpPage()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error generating help page:", err)
+		os.Exit(1)
+	}
+	flag.Usage = func() {
+		fmt.Print(helpPage)
+	}
 	flag.Parse()
 
 	if *brightnessFile == "" || *maxBrightnessFile == "" {
 		var err error
-		*brightnessFile, *maxBrightnessFile, err = DetectBrightnessFiles()
+		*brightnessFile, *maxBrightnessFile, err = detectBrightnessFiles()
 		if err != nil {
 			log.Fatalf("Failed to detect brightness control files: %v", err)
 		}
