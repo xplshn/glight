@@ -23,3 +23,20 @@ It changes the brightness smoothly and is entirely configurable.
 
 ]~/Documents/TrulyMine/glight.v4l@
 ```
+
+### In order to use this, /dev/video* should be available and writable, as well as /sys/class/backlight/*/brightness and /sys/class/backlight/*/max_brightness.
+This is my `/etc/rc.local`, you can also do this with an mdev script or with a udev rule. Use whichever is best for you.
+```
+#!/bin/sh
+
+# For AppBundle/AppImage/FlatImage support
+modprobe fuse
+
+# Change group ownership to 'video'
+chown root.video /dev/video*
+chown root.video /sys/class/backlight/*/brightness
+# Set group write permissions
+chmod g+rw /dev/video*
+chmod g+rw /sys/class/backlight/*/brightness
+
+```
